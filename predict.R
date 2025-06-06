@@ -82,13 +82,23 @@ generate_lagged_model <- function(df, covariates, nlag) {
   # Get all new column names added
   basis_columns <- colnames(basis_df)
 
+  # Data wrangling for north-side divide - assumes a binary variable with column name group, can be changed
+    df$group <- as.factor(df$group) # probably not neccesary
+  
+  df$ID_time_cyclic_grouped <- interaction(df$ID_time_cyclic, df$group, drop = TRUE)
+  
+  df$ID_time_cyclic_grouped <- as.numeric(df$ID_time_cyclic_grouped)
+  
+  df$f_cyclic <- df$ID_time_cyclic_grouped
+
   # Generate formula string using column names directly
   basis_terms <- paste(basis_columns, collapse = " + ")
   print(basis_terms)
   formula_str <- paste(
     "Cases ~ 1 +",
     "f(ID_spat, model='iid', replicate=ID_year) +",
-    "f(ID_time_cyclic, model='rw1', cyclic=TRUE, scale.model=TRUE) +",
+    #"f(ID_time_cyclic, model='rw1', cyclic=TRUE, scale.model=TRUE) +",
+    "f(f_cyclic, model = "rw1", cyclic = TRUE, replicate = df$group, scale.model = TRUE) +", #replicates a unique cyclic rw1 for each group, like north and south
     basis_terms
   )
 
