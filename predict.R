@@ -149,7 +149,7 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
   model <- inla(formula = lagged_formula, data = df, family = "nbinomial", offset = log(E),
                 control.inla = list(strategy = 'adaptive'),
                 control.compute = list(dic = TRUE, config = TRUE, cpo = TRUE, return.marginals = FALSE),
-                control.fixed = list(correlation.matrix = TRUE, prec.intercept = 1e-4, prec = precision),
+                control.fixed = list(correlation.matrix = TRUE, prec.intercept = 1e-4, prec = 100),
                 control.predictor = list(link = 1, compute = TRUE),
                 verbose = F, safe=FALSE)
   
