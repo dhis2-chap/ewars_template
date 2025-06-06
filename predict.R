@@ -98,7 +98,7 @@ generate_lagged_model <- function(df, covariates, nlag) {
     "Cases ~ 1 +",
     "f(ID_spat, model='iid', replicate=ID_year) +",
     #"f(ID_time_cyclic, model='rw1', cyclic=TRUE, scale.model=TRUE) +",
-    "f(f_cyclic, model = "rw1", cyclic = TRUE, replicate = df$group, scale.model = TRUE) +", #replicates a unique cyclic rw1 for each group, like north and south
+    "f(f_cyclic, model = 'rw1', cyclic = TRUE, replicate = df$group, scale.model = TRUE) +", #replicates a unique cyclic rw1 for each group, like north and south
     basis_terms
   )
 
@@ -117,8 +117,7 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
     nlag<- config$user_option_values$n_lag
     precision <- config$user_option_values$precision
     # Use config$user_option_values and config$additional_continuous_covariates as needed
-  }
-  else {
+  } else {
         covariate_names <- c()
   }
   df <- read.csv(future_fn) #the two columns on the next lines are not normally included in the future df
@@ -200,8 +199,18 @@ if (length(args) >= 1) {
 
 #Testing
 
-# model_fn <- "example_data_monthly/model"
-# hist_fn <- "example_data_monthly/historic_data.csv"
-# future_fn <- "example_data_monthly/future_data.csv"
-# preds_fn <- "example_data_monthly/predictions.csv"
+model_fn <- "example_data_monthly/model"
+hist_fn <- "example_data_monthly/historic_data.csv"
+future_fn <- "example_data_monthly/future_data.csv"
+preds_fn <- "example_data_monthly/predictions.csv"
+
+# df <- read.csv(preds_fn)
+# 
+# df$group <- ifelse(df$location == "Acre", 1, 0)
+# 
+# write.csv(df, hist_fn, row.names = FALSE)
+
+
+predict_chap(model_fn, hist_fn, future_fn, preds_fn, config_fn="")
+
 
