@@ -119,6 +119,7 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
     # Use config$user_option_values and config$additional_continuous_covariates as needed
   } else {
         covariate_names <- c()
+        precision <- 0.01
   }
   df <- read.csv(future_fn) #the two columns on the next lines are not normally included in the future df
   df$Cases <- rep(NA, nrow(df))
@@ -149,7 +150,7 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
   model <- inla(formula = lagged_formula, data = df, family = "nbinomial", offset = log(E),
                 control.inla = list(strategy = 'adaptive'),
                 control.compute = list(dic = TRUE, config = TRUE, cpo = TRUE, return.marginals = FALSE),
-                control.fixed = list(correlation.matrix = TRUE, prec.intercept = 1e-4, prec = 100),
+                control.fixed = list(correlation.matrix = TRUE, prec.intercept = 1e-4, prec = precision),
                 control.predictor = list(link = 1, compute = TRUE),
                 verbose = F, safe=FALSE)
   
