@@ -8,7 +8,7 @@ predict_chap("example_data/model", "example_data/training_data.csv", "example_da
 
 #test for monthly data
 train_chap("example_data_monthly/trainData.csv", "example_data_monthly/model")
-predict_chap("example_data_monthly/model", "example_data_monthly/historic_data.csv", "example_data_monthly/future_data.csv", "example_data_monthly/predictions.csv", "model_configuration_for_run.yaml")
+predict_chap("example_data_monthly/model", "example_data_monthly/historic_data.csv", "example_data_monthly/future_data.csv", "example_data_monthly/predictions.csv", "example_config.yaml")
 
 
 # library(tsibble)
