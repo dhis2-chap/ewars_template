@@ -13,7 +13,11 @@ user_options:
   precision:
     type: number
     default: 0.01
-    description: Prior on the precision of fixed effects. Works as regularization
+    description: Prior on the precision of fixed effects. Works as regularization.
+  region_seasonal:
+    type: bool
+    default: false
+    description: Optional inclusion of region specific seasonal effects.
 
 meta_data: 
   display_name: CHAP-EWARS Model
