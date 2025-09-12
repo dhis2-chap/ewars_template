@@ -115,14 +115,20 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
     config <- parse_model_configuration(config_fn)
     covariate_names <- config$additional_continuous_covariates
     nlag<- config$user_option_values$n_lag
+    if(is.null(nlag)){nlag <- 3}
     precision <- config$user_option_values$precision
+    if(is.null(precision)){precision <- 0.01}
     region_seasonal <- config$user_option_values$region_seasonal
+    if(is.null(region_seasonal)){region_seasonal <- FALSE}
     # Use config$user_option_values and config$additional_continuous_covariates as needed
   } else {
     covariate_names <- c("rainfall", "mean_temperature")
     precision <- 0.01
     region_seasonal <- 1
   }
+  print(precision)
+  print(nlag)
+  print(region_seasonal)
   df <- read.csv(future_fn) #the two columns on the next lines are not normally included in the future df
   df$Cases <- rep(NA, nrow(df))
   df$disease_cases <- rep(NA, nrow(df)) #so we can rowbind it with historic
@@ -133,11 +139,9 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
   if( "week" %in% colnames(df)){ # for a weekly model
     df <- mutate(df, ID_time_cyclic = week)
     df <- offset_years_and_weeks(df)
-    nlag <- 12
   } else{ # for a monthly model
     df <- mutate(df, ID_time_cyclic = month)
     df <- offset_years_and_months(df)
-    nlag <- 3
   }
   
   #for region_seasonal
@@ -213,4 +217,5 @@ if (length(args) >= 1) {
 # hist_fn <- "example_data_monthly/historic_data.csv"
 # future_fn <- "example_data_monthly/future_data.csv"
 # preds_fn <- "example_data_monthly/predictions.csv"
+# config_fn <- "model_configuration_for_run.yaml"
 
