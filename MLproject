@@ -39,7 +39,7 @@ adapters: {'Cases': 'disease_cases',
            }
 
 docker_env:
-  image: ghcr.io/dhis2-chap/docker_r_inla:master
+  image: ivargr/r_inla:latest
 
 entry_points:
   train:
