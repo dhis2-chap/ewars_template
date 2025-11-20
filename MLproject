@@ -15,7 +15,7 @@ user_options:
     default: 0.01
     description: Prior on the precision of fixed effects. Works as regularization.
   region_seasonal:
-    type: bool
+    type: boolean
     default: false
     description: Optional inclusion of region specific seasonal effects.
 
