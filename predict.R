@@ -130,6 +130,7 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
   print(nlag)
   print(region_seasonal)
   df <- read.csv(future_fn) #the two columns on the next lines are not normally included in the future df
+  unique_file_name <- df[1, "time_period"]
   df$Cases <- rep(NA, nrow(df))
   df$disease_cases <- rep(NA, nrow(df)) #so we can rowbind it with historic
   
@@ -166,6 +167,21 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
                 control.fixed = list(correlation.matrix = TRUE, prec.intercept = 1e-4, prec = precision),
                 control.predictor = list(link = 1, compute = TRUE),
                 verbose = F, safe=FALSE)
+  
+  # Explainability - saves the mean and sd of the fixed effects
+  fe_df <- data.frame(
+    term = rownames(model$summary.fixed),
+    mean = model$summary.fixed$mean,
+    sd = model$summary.fixed$sd,
+    row.names = NULL
+  )
+  
+  print(unique_file_name)
+  #write this to a file with the start month of the pred in the filename
+  filepath <- paste0("explainability_", unique_file_name,".csv")
+  write.csv(fe_df, filepath, row.names = FALSE)
+  
+  # End of explainability
   
   casestopred <- df$Cases # response variable
   

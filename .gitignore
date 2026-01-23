@@ -1,2 +1,5 @@
 .Rhistory
 example_data_monthly/model
+.DS_Store
+.Rproj.user
+ewars_template.Rproj
