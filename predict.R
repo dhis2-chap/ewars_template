@@ -33,10 +33,10 @@ parse_model_configuration <- function(file_path) {
     list()
   }
   
-  additional_continuous_covariates <- if (!is.null(config$additional_continuous_covariates)) {
+  additional_continuous_covariates <- if (!is.null(config$additional_continuous_covariates) && length(config$additional_continuous_covariates) > 0) {
     config$additional_continuous_covariates
   } else {
-    character()
+    c("rainfall", "mean_temperature")  # Default covariates when not specified
   }
   
   # Return the structured list
@@ -124,6 +124,7 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
   } else {
     covariate_names <- c("rainfall", "mean_temperature")
     precision <- 0.01
+    nlag <- 3
     region_seasonal <- 1
   }
   print(precision)
