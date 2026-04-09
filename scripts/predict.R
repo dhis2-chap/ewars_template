@@ -100,17 +100,34 @@ predict_chap <- function(hist_fn, future_fn, preds_fn, config_path) {
   cat("Config: n_lags=", nlag, " precision=", precision, "\n")
   cat("Covariates:", paste(covariate_names, collapse=", "), "\n")
 
-  df <- read.csv(future_fn)
-  df$Cases <- rep(NA, nrow(df))
-  if (!("disease_cases" %in% colnames(df))) {
-    df$disease_cases <- rep(NA, nrow(df))
+  historic_df <- read.csv(hist_fn)
+  future_df <- read.csv(future_fn)
+
+  # Ensure disease_cases exists in future data as NA (rows to predict)
+  if (!("disease_cases" %in% colnames(future_df))) {
+    future_df$disease_cases <- NA
   }
 
-  historic_df <- read.csv(hist_fn)
-  df <- rbind(historic_df, df)
+  if (nrow(historic_df) > 0) {
+    df <- rbind(historic_df, future_df)
+  } else {
+    df <- future_df
+  }
 
   # Apply column adapters (CHAP standard -> internal names)
   df <- apply_adapters(df)
+
+  # Extract year and month/week from time_period if not already present
+  if (!("ID_year" %in% colnames(df))) {
+    df$ID_year <- as.integer(substr(df$time_period, 1, 4))
+  }
+  if (!("week" %in% colnames(df)) && !("month" %in% colnames(df))) {
+    if (grepl("W", df$time_period[1])) {
+      df$week <- as.integer(sub(".*W", "", df$time_period))
+    } else {
+      df$month <- as.integer(substr(df$time_period, 6, 7))
+    }
+  }
 
   if ("week" %in% colnames(df)) {
     df <- mutate(df, ID_time_cyclic = week)
@@ -153,7 +170,7 @@ predict_chap <- function(hist_fn, future_fn, preds_fn, config_path) {
     y.pred[, s.idx] <- rnbinom(mpred, mu = exp(xx.sample[-1]), size = xx.sample[1])
   }
 
-  new.df <- data.frame(time_period = df$time_period[idx.pred], location = df$location[idx.pred], y.pred)
+  new.df <- data.frame(time_period = df$time_period[idx.pred], location = df$ID_spat[idx.pred], y.pred)
   colnames(new.df) <- c('time_period', 'location', paste0('sample_', 0:(s-1)))
 
   write.csv(new.df, preds_fn, row.names = FALSE)
