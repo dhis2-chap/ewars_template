@@ -18,10 +18,6 @@ class EwarsConfig(BaseConfig):
         default=0.01,
         description="Prior on the precision of fixed effects. Works as regularization",
     )
-    additional_continuous_covariates: list[str] = Field(
-        default_factory=list,
-        description="List of continuous covariate names to include (e.g. rainfall, mean_temperature)",
-    )
 
 
 runner = ShellModelRunner(
