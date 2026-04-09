@@ -1,6 +1,9 @@
-from chapkit import BaseConfig, ArtifactHierarchy
-from chapkit.api import MLServiceBuilder, MLServiceInfo
-from chapkit.api.service_builder import ModelMetadata, PeriodType, AssessedStatus
+import os
+from pathlib import Path
+
+from chapkit import BaseConfig
+from chapkit.api import AssessedStatus, MLServiceBuilder, MLServiceInfo, ModelMetadata, PeriodType
+from chapkit.artifact import ArtifactHierarchy
 from chapkit.ml import ShellModelRunner
 from pydantic import Field
 
@@ -20,7 +23,7 @@ class EwarsConfig(BaseConfig):
     )
 
 
-runner = ShellModelRunner(
+runner: ShellModelRunner[EwarsConfig] = ShellModelRunner(
     train_command="Rscript scripts/train.R --data {data_file}",
     predict_command="Rscript scripts/predict.R --historic {historic_file} --future {future_file} --output {output_file}",
 )
@@ -28,6 +31,7 @@ runner = ShellModelRunner(
 info = MLServiceInfo(
     id="ewars-template",
     display_name="CHAP-EWARS Model",
+    version="1.0.0",
     description=(
         "Modified version of the World Health Organization (WHO) EWARS model. "
         "EWARS is a Bayesian hierarchical model implemented with the INLA library."
@@ -47,14 +51,27 @@ info = MLServiceInfo(
     period_type=PeriodType.monthly,
     allow_free_additional_continuous_covariates=True,
     required_covariates=["population"],
+    min_prediction_periods=0,
+    max_prediction_periods=100,
 )
 
-hierarchy = ArtifactHierarchy(name="ewars")
-
-builder = MLServiceBuilder(
-    info=info,
-    config_schema=EwarsConfig,
-    hierarchy=hierarchy,
-    runner=runner,
+hierarchy = ArtifactHierarchy(
+    name="ewars",
+    level_labels={0: "ml_training_workspace", 1: "ml_prediction"},
 )
-app = builder.build()
+
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///data/chapkit.db")
+if DATABASE_URL.startswith("sqlite") and ":///" in DATABASE_URL:
+    db_path = Path(DATABASE_URL.split("///")[1])
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+
+app = (
+    MLServiceBuilder(
+        info=info,
+        config_schema=EwarsConfig,
+        hierarchy=hierarchy,
+        runner=runner,
+        database_url=DATABASE_URL,
+    )
+    .build()
+)
