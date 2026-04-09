@@ -6,6 +6,10 @@ from pydantic import Field
 
 
 class EwarsConfig(BaseConfig):
+    prediction_periods: int = Field(
+        default=3,
+        description="Number of periods to predict into the future",
+    )
     n_lags: int = Field(
         default=3,
         description="Number of lags to include in the model",
