@@ -65,15 +65,22 @@ generate_bacic_model <- function(df, covariates, nlag, region_seasonal) {
 generate_lagged_model <- function(df, covariates, nlag, region_seasonal) {
   basis_list <- list()
   
-  for (cov in covariates) {
-    var_data <- df[[cov]]
+  #check that nlag and covariates lengths match up
+  stopifnot(
+    "nlag must have length 1 or the same length as the number of covariates" =
+    length(nlag) == 1 | length(nlag) == length(covariates)
+    )
+  if(length(nlag) < length(covariates)) {nlag <- rep(nlag, times=length(covariates))}
+  
+  for (i in 1:length(covariates)) {
+    var_data <- df[[covariates[i]]]
     basis <- crossbasis(
-      var_data, lag = nlag,
+      var_data, lag = c(1, nlag[i]),
       argvar = list(fun = "ns", knots = equalknots(var_data, 2)),
-      arglag = list(fun = "ns", knots = nlag / 2),
+      arglag = list(fun = "ns", knots = equalknots(1:nlag[i], round(nlag[i] / 2))),
       group = df$ID_spat
     )
-    basis_name <- paste0("basis_", cov)
+    basis_name <- paste0("basis_", covariates[i])
     colnames(basis) <- paste0(basis_name, ".", colnames(basis))
     basis_list[[basis_name]] <- basis
   }
@@ -125,10 +132,12 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
     covariate_names <- c("rainfall", "mean_temperature")
     precision <- 0.01
     region_seasonal <- 1
+    nlag <- c(3, 3)
   }
   print(precision)
   print(nlag)
   print(region_seasonal)
+  print(covariate_names)
   df <- read.csv(future_fn) #the two columns on the next lines are not normally included in the future df
   df$Cases <- rep(NA, nrow(df))
   df$disease_cases <- rep(NA, nrow(df)) #so we can rowbind it with historic
@@ -155,7 +164,6 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
     generated <- generate_lagged_model(df, covariate_names, nlag, region_seasonal)
   }
   lagged_formula <- generated$formula
-  print(colnames(df))
   df <- generated$data
   print(colnames(df))
   df$ID_spat <- as.integer(as.factor(df$ID_spat)) #to avoid issues with replicate

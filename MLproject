@@ -7,9 +7,11 @@ supported_period_type: any
 allow_free_additional_continuous_covariates: true
 user_options:
   n_lags:
-    type: integer
-    default: 3
-    description: Number of lags to include in the model.
+    type: array
+    items:
+      type: integer
+    default: [3]
+    description: Number of lags per covariate. Single value applies to all covariates, or provide one value per covariate.
   precision:
     type: number
     default: 0.01
