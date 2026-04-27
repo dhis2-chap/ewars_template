@@ -18,6 +18,8 @@ user_options:
 meta_data: 
   display_name: CHAP-EWARS Model
   description: >
+    DEPRECATED: This model has been superseded by the chapkit-based version
+    (chapkit_ewars_model). New users should prefer the chapkit version.
     Modified version of the World Health Organization (WHO) EWARS model.
     EWARS is a Bayesian hierarchical model implemented with the INLA library.
   author: CHAP team
