@@ -21,7 +21,7 @@ meta_data:
     Modified version of the World Health Organization (WHO) EWARS model.
     EWARS is a Bayesian hierarchical model implemented with the INLA library.
   author: CHAP team
-  author_assessed_status: orange
+  author_assessed_status: gray
   organization: HISP Centre, University of Oslo
   organization_logo_url: https://landportal.org/sites/default/files/2024-03/university_of_oslo_logo.png
   contact_email: knut.rand@dhis2.org
