@@ -132,7 +132,7 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
     covariate_names <- c("rainfall", "mean_temperature")
     precision <- 0.01
     region_seasonal <- 1
-    nlag <- c(3, 3)
+    nlag <- 3
   }
   print(precision)
   print(nlag)
