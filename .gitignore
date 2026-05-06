@@ -1,7 +1,7 @@
 .Rhistory
-example_data_monthly/model
 /.Rproj.user
 .DS_Store
-example_data_monthly/predictions.csv
-example_data_monthly/predictions.csv
 ewars_template.Rproj
+example_data_monthly/model
+example_data_monthly/predictions.csv
+model_configuration_for_run.yaml
