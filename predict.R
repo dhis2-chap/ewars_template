@@ -121,7 +121,7 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
     print(config_fn)
     config <- parse_model_configuration(config_fn)
     covariate_names <- config$additional_continuous_covariates
-    nlag<- config$user_option_values$n_lag
+    nlag<- config$user_option_values$n_lags
     if(is.null(nlag)){nlag <- 3}
     precision <- config$user_option_values$precision
     if(is.null(precision)){precision <- 0.01}
@@ -131,7 +131,7 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
   } else {
     covariate_names <- c("rainfall", "mean_temperature")
     precision <- 0.01
-    region_seasonal <- 1
+    region_seasonal <- FALSE
     nlag <- 3
   }
   print(precision)

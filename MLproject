@@ -6,12 +6,12 @@ required_covariates:
 supported_period_type: any
 allow_free_additional_continuous_covariates: true
 user_options:
-  n_lag:
+  n_lags:
     type: array
     items:
       type: integer
     default: [3]
-    description: Number of lags per covariate. Single value applies to all covariates, or provide one value per covariate.
+    description: Number of lags per covariate, in the same order as additional_continuous_covariates. A single value applies to all covariates.
   precision:
     type: number
     default: 0.01
