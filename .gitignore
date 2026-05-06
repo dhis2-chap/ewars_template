@@ -1,1 +1,7 @@
 .Rhistory
+/.Rproj.user
+.DS_Store
+ewars_template.Rproj
+example_data_monthly/model
+example_data_monthly/predictions.csv
+model_configuration_for_run.yaml

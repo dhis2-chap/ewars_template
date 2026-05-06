@@ -25,20 +25,20 @@ parse_model_configuration <- function(file_path) {
   # Load YAML content
   config <- yaml.load_file(file_path)
   print(config)
-
+  
   # Ensure fields exist and provide defaults if missing
   user_option_values <- if (!is.null(config$user_option_values)) {
     fromJSON(toJSON(config$user_option_values))
   } else {
     list()
   }
-
+  
   additional_continuous_covariates <- if (!is.null(config$additional_continuous_covariates)) {
     config$additional_continuous_covariates
   } else {
     character()
   }
-
+  
   # Return the structured list
   list(
     user_option_values = user_option_values,
@@ -46,42 +46,54 @@ parse_model_configuration <- function(file_path) {
   )
 }
 
-generate_bacic_model <- function(df, covariates, nlag) {
+generate_bacic_model <- function(df, covariates, nlag, region_seasonal) {
   formula_str <- paste(
     "Cases ~ 1 +",
     "f(ID_spat, model='iid', replicate=ID_year) +",
     "f(ID_time_cyclic, model='rw1', cyclic=TRUE, scale.model=TRUE)"
   )
+  if(region_seasonal){
+    formula_str <- paste(formula_str, "+ f(ID_time_cyclic2, model='rw1',
+                         cyclic=TRUE, scale.model=TRUE, replicate=ID_spat)")
+  }
+  
   model_formula <- as.formula(formula_str)
-
+  
   return(list(formula = model_formula, data = df))
 }
 
-generate_lagged_model <- function(df, covariates, nlag) {
+generate_lagged_model <- function(df, covariates, nlag, region_seasonal) {
   basis_list <- list()
-
-  for (cov in covariates) {
-    var_data <- df[[cov]]
+  
+  #check that nlag and covariates lengths match up
+  stopifnot(
+    "nlag must have length 1 or the same length as the number of covariates" =
+    length(nlag) == 1 | length(nlag) == length(covariates)
+    )
+  if(length(nlag) < length(covariates)) {nlag <- rep(nlag, times=length(covariates))}
+  
+  for (i in 1:length(covariates)) {
+    var_data <- df[[covariates[i]]]
     basis <- crossbasis(
-      var_data, lag = nlag,
+      var_data, lag = c(1, nlag[i]),
       argvar = list(fun = "ns", knots = equalknots(var_data, 2)),
-      arglag = list(fun = "ns", knots = nlag / 2),
+      arglag = list(fun = "ns", knots = equalknots(1:nlag[i], round(nlag[i] / 2))),
       group = df$ID_spat
     )
-    basis_name <- paste0("basis_", cov)
+    basis_name <- paste0("basis_", covariates[i])
     colnames(basis) <- paste0(basis_name, ".", colnames(basis))
     basis_list[[basis_name]] <- basis
   }
-
+  
   # Combine basis matrices into one data frame
   basis_df <- do.call(cbind, basis_list)
-
+  
   # Merge with the original dataframe
   model_data <- cbind(df, basis_df)
-
+  
   # Get all new column names added
   basis_columns <- colnames(basis_df)
-
+  
   # Generate formula string using column names directly
   basis_terms <- paste(basis_columns, collapse = " + ")
   print(basis_terms)
@@ -91,9 +103,14 @@ generate_lagged_model <- function(df, covariates, nlag) {
     "f(ID_time_cyclic, model='rw1', cyclic=TRUE, scale.model=TRUE) +",
     basis_terms
   )
-
+  
+  if(region_seasonal){
+    formula_str <- paste(formula_str, "+ f(ID_time_cyclic2, model='rw1',
+                         cyclic=TRUE, scale.model=TRUE, replicate=ID_spat)")
+  }
+  
   model_formula <- as.formula(formula_str)
-
+  
   return(list(formula = model_formula, data = model_data))
 }
 
@@ -104,13 +121,23 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
     print(config_fn)
     config <- parse_model_configuration(config_fn)
     covariate_names <- config$additional_continuous_covariates
-    nlag<- config$user_option_values$n_lag
+    nlag<- config$user_option_values$n_lags
+    if(is.null(nlag)){nlag <- 3}
     precision <- config$user_option_values$precision
+    if(is.null(precision)){precision <- 0.01}
+    region_seasonal <- config$user_option_values$region_seasonal
+    if(is.null(region_seasonal)){region_seasonal <- FALSE}
     # Use config$user_option_values and config$additional_continuous_covariates as needed
   } else {
-      covariate_names <- c("rainfall", "mean_temperature")
-      precision <- 0.01
+    covariate_names <- c("rainfall", "mean_temperature")
+    precision <- 0.01
+    region_seasonal <- FALSE
+    nlag <- 3
   }
+  print(precision)
+  print(nlag)
+  print(region_seasonal)
+  print(covariate_names)
   df <- read.csv(future_fn) #the two columns on the next lines are not normally included in the future df
   df$Cases <- rep(NA, nrow(df))
   df$disease_cases <- rep(NA, nrow(df)) #so we can rowbind it with historic
@@ -121,24 +148,26 @@ predict_chap <- function(model_fn, hist_fn, future_fn, preds_fn, config_fn=""){
   if( "week" %in% colnames(df)){ # for a weekly model
     df <- mutate(df, ID_time_cyclic = week)
     df <- offset_years_and_weeks(df)
-    nlag <- 12
   } else{ # for a monthly model
     df <- mutate(df, ID_time_cyclic = month)
     df <- offset_years_and_months(df)
-    nlag <- 3
   }
   
+  #for region_seasonal
+  df$ID_time_cyclic2 <- df$ID_time_cyclic
+  
   df$ID_year <- df$ID_year - min(df$ID_year) + 1 #makes the years 1, 2, ...
-
+  
   if (length(covariate_names) == 0) {
-    generated <- generate_bacic_model(df, covariate_names, nlag)
+    generated <- generate_bacic_model(df, covariate_names, nlag, region_seasonal)
   } else {
-    generated <- generate_lagged_model(df, covariate_names, nlag)
+    generated <- generate_lagged_model(df, covariate_names, nlag, region_seasonal)
   }
   lagged_formula <- generated$formula
-  print(colnames(df))
   df <- generated$data
   print(colnames(df))
+  df$ID_spat <- as.integer(as.factor(df$ID_spat)) #to avoid issues with replicate
+  
   model <- inla(formula = lagged_formula, data = df, family = "nbinomial", offset = log(E),
                 control.inla = list(strategy = 'adaptive'),
                 control.compute = list(dic = TRUE, config = TRUE, cpo = TRUE, return.marginals = FALSE),
@@ -196,4 +225,5 @@ if (length(args) >= 1) {
 # hist_fn <- "example_data_monthly/historic_data.csv"
 # future_fn <- "example_data_monthly/future_data.csv"
 # preds_fn <- "example_data_monthly/predictions.csv"
+# config_fn <- "model_configuration_for_run.yaml"
 

@@ -7,13 +7,19 @@ supported_period_type: any
 allow_free_additional_continuous_covariates: true
 user_options:
   n_lags:
-    type: integer
-    default: 3
-    description: Number of lags to include in the model.
+    type: array
+    items:
+      type: integer
+    default: [3]
+    description: Number of lags per covariate, in the same order as additional_continuous_covariates. A single value applies to all covariates.
   precision:
     type: number
     default: 0.01
-    description: Prior on the precision of fixed effects. Works as regularization
+    description: Prior on the precision of fixed effects. Works as regularization.
+  region_seasonal:
+    type: boolean
+    default: false
+    description: Optional inclusion of region specific seasonal effects.
 
 meta_data: 
   display_name: CHAP-EWARS Model
