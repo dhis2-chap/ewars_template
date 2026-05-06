@@ -2,6 +2,6 @@ additional_continuous_covariates:
   - rainfall
   - mean_temperature
 user_option_values:
-  n_lag: [3, 6]
+  n_lag: 3
   precision: 1
   region_seasonal: false

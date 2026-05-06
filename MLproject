@@ -6,7 +6,7 @@ required_covariates:
 supported_period_type: any
 allow_free_additional_continuous_covariates: true
 user_options:
-  n_lags:
+  n_lag:
     type: array
     items:
       type: integer
