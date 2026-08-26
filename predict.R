@@ -77,7 +77,13 @@ generate_lagged_model <- function(df, covariates, nlag, region_seasonal) {
     basis <- crossbasis(
       var_data, lag = c(1, nlag[i]),
       argvar = list(fun = "ns", knots = equalknots(var_data, 2)),
-      arglag = list(fun = "ns", knots = equalknots(1:nlag[i], round(nlag[i] / 2))),
+      # The lag basis is evaluated at only nlag distinct points, so it can carry
+      # at most nlag independent columns. equalknots(1:nlag, round(nlag / 2))
+      # asks for round(nlag / 2) + 2 columns (knots + 1, plus the intercept
+      # crossbasis forces on the lag dimension), which overshoots for nlag < 4
+      # and makes the basis rank deficient. Capping df at nlag keeps it full
+      # rank; for nlag >= 4 the basis is unchanged.
+      arglag = list(fun = "ns", df = min(nlag[i], round(nlag[i] / 2) + 2)),
       group = df$ID_spat
     )
     basis_name <- paste0("basis_", covariates[i])
