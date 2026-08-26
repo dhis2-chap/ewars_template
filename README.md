@@ -1,5 +1,28 @@
 # chap_auto_ewars for weekly and monthly data
 
+## Testing
+
+```
+make test          # local R installation
+make test-docker   # inside ghcr.io/dhis2-chap/docker_r_inla:master
+```
+
+The suite lives in `tests/testthat/` and runs with `testthat`. It covers the
+calendar helpers in `lib.R`, configuration parsing, the crossbasis and formula
+built by `generate_lagged_model`, and an end-to-end `predict_chap` run over
+`example_data_monthly/`.
+
+The end-to-end test needs the INLA solver binary, which INLA ships separately
+from its R package and does not build for every platform. That test skips
+itself when the binary is missing, so a local `make test` exercises everything
+except the model fit. `make test-docker` and CI run inside the model image and
+so run the whole suite.
+
+`tests/testthat/helper-ewars.R` sources `predict.R` from the repository root
+and neutralises the `commandArgs()` block at the bottom of that script, so the
+suite cannot start a real prediction run of its own.
+
+
 ## The difference between weekly and monthly
 ```R
 if( "week" %in% colnames(df)){ # for a weekly model

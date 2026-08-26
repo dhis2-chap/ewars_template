@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # The model image carries INLA, dlnm and the spatial stack, so the suite
+    # runs against the same dependencies as a real CHAP run.
+    container:
+      image: ghcr.io/dhis2-chap/docker_r_inla:master
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install test dependencies
+        run: >
+          R -e "install.packages(c('testthat', 'yaml', 'jsonlite'),
+          repos = 'https://cloud.r-project.org')"
+
+      - name: Run tests
+        run: Rscript tests/run_tests.R
